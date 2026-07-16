@@ -1,0 +1,7 @@
+# personal / instance data — never commit; point ambient/events at a URL instead
+ambient.json
+events.json
+
+# os / tooling
+.DS_Store
+.playwright-mcp/
