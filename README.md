@@ -16,7 +16,8 @@ editing **one file, `config.js`** — or by adding URL params to a bookmark.
 2. Settings → **Pages** → **Build and deployment → Source: GitHub Actions**
    (this repo ships an Actions deploy workflow). You get a URL like
    `https://you.github.io/your-repo/`.
-3. Open it. Done — it shows London weather, a quote, and a poem.
+3. Open it. Done — it shows the date, London weather and the moon phase. Quotes,
+   poems and learning decks are **opt-in** (point them at a source — see below).
 4. Edit **`config.js`** to make it yours (see below). Commit → Pages redeploys.
 
 Point your Kindle's browser at the URL. (Keeping a Kindle awake on one page is
@@ -29,7 +30,7 @@ Everything lives in [`config.js`](config.js), fully commented. The essentials:
 ```js
 window.CONFIG = {
   place: "London", latitude: 51.507, longitude: -0.128, timezone: "Europe/London",
-  quotes: "default", poems: "default", decks: null,
+  quotes: null, poems: null, decks: null,   // opt-in — point at your own source
   ambient: null, events: null,
   profiles: [{ key: "me", name: "" }]
 };
@@ -72,10 +73,10 @@ renders today.
     `q`/`a` (the recall question and answer). Local `.js` sets
     `window.CONTENT_DECKS`.
 
-**No learning decks ship by default** (`decks: null`) — point `decks` at your own
-JSON source (or a `local:content/yourpack.js` you add) to enable the tap-to-open
-decks. To swap quotes/poems, point `quotes`/`poems` at a URL (JSON or CSV) or a
-`local:` file the same way.
+**Nothing ships bundled** — no quotes, poems or decks by default, so the public
+repo stays free of copyrighted or personal content. Enable each by pointing it at
+your own source: a URL (JSON/CSV) or a `local:content/yourpack.js` file you add
+that sets the matching global (`CONTENT_QUOTES` / `CONTENT_POEMS` / `CONTENT_DECKS`).
 
 ## Optional live modules
 
@@ -109,4 +110,4 @@ web search for your exact Kindle.
 - `index.html` — loads `config.js`, then `app.js`. No build step.
 - `config.js` — **your settings** (the only file you normally edit).
 - `app.js` — the engine. Generic; contains no personal data.
-- `content/` — the default quote and poem packs.
+- `content/` — where you drop your own quote / poem / deck packs (empty by default).

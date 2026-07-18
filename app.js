@@ -21,7 +21,7 @@
   var DEFAULTS = {
     place: "London", latitude: 51.507, longitude: -0.128, timezone: "Europe/London",
     theme: "night",
-    quotes: "default", poems: "default", decks: null,
+    quotes: null, poems: null, decks: null,
     ambient: null, events: null,
     profiles: [{ key: "me", name: "" }]
   };

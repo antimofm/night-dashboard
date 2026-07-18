@@ -22,9 +22,12 @@ window.CONFIG = {
   //    "https://…/list.json"     fetch a remote JSON (or .csv) list
   //    "local:content/x.js"      a file you add under the site that sets the global
   //    null                      turn the section off
-  quotes: "default",
-  poems:  "default",
-  decks:  null,        // no learning decks ship by default — point this at your own source to add some
+  // Nothing ships bundled (keeps the public repo free of copyrighted/personal
+  // content). Point each at your own source — a URL (JSON/CSV) or a
+  // "local:content/yourpack.js" file you add — to enable it.
+  quotes: null,
+  poems:  null,
+  decks:  null,
 
   // ── Optional live modules — OFF unless you point them at a feed ──────────────
   //  Fetch JSON in the shapes documented in the README. Off by default, so a
