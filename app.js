@@ -158,12 +158,21 @@
   // resolve to a remote URL (e.g. local://evil/x.js -> //evil/x.js -> remote script).
   function localPath(spec) {
     var p = String(spec).slice(6);
-    if (!/^[A-Za-z0-9]/.test(p) || /[:\\]/.test(p) || p.indexOf("//") > -1 || p.indexOf("..") > -1) return null;
+    // same-origin relative path only: reject scheme, backslash, percent-encoding
+    // (blocks %2e%2e traversal), protocol-relative/absolute, and literal traversal.
+    if (!/^[A-Za-z0-9]/.test(p) || /[:\\%]/.test(p) || p.indexOf("//") > -1 || p.indexOf("..") > -1) return null;
     return p;
   }
   function resolveUrl(spec) {
-    if (String(spec).indexOf("local:") === 0) { var p = localPath(spec); return p ? (BASE + p) : null; }
-    return String(spec);
+    if (String(spec).indexOf("local:") !== 0) return String(spec);
+    var p = localPath(spec);
+    if (p === null) return null;
+    // Belt-and-braces: resolve and require the result stays under this deploy dir.
+    if (typeof URL === "function") {
+      try { var base = location.origin + BASE; if ((new URL(p, base).href).indexOf(base) !== 0) return null; }
+      catch (e) { return null; }
+    }
+    return BASE + p;
   }
   // For quotes / poems / decks: "default" | URL | "local:file.js" | null.
   function loadContent(spec, globalName, defaultFile, cb) {
@@ -395,7 +404,7 @@
     var m = moonInfo(now);
     var fline = function (label, mn, mx, desc) {
       var L = label; while (L.length < 9) L += " ";
-      return "<div class='line' style='white-space:pre'>" + L + Math.round(mn) + "°-" + Math.round(mx) + "°   " + desc + "</div>";
+      return "<div class='line' style='white-space:pre'>" + L + Math.round(mn) + "°-" + Math.round(mx) + "°   " + esc(desc) + "</div>";
     };
     var fday = function (i) {
       return fline(dayName(daily.time[i]), daily.temperature_2m_min[i], daily.temperature_2m_max[i],
@@ -410,7 +419,7 @@
                 wmoShort(daily.weather_code[1]) + " · rain " + daily.precipitation_probability_max[1] + "%");
     wh += fday(2);
     wh += fday(3);
-    wh += "<div class='line dim'>Sunrise " + daily.sunrise[1].slice(11,16) + "    Sunset " + daily.sunset[1].slice(11,16) + "</div>";
+    wh += "<div class='line dim'>Sunrise " + esc(daily.sunrise[1].slice(11,16)) + "    Sunset " + esc(daily.sunset[1].slice(11,16)) + "</div>";
     document.getElementById("weather").innerHTML = wh;
   };
   try { xhr.send(); } catch (e) { wxFail(); }
