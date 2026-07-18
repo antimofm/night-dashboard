@@ -34,9 +34,11 @@
   var qp = {};
   location.search.replace(/^\?/, "").split("&").forEach(function (pair) {
     if (!pair) return;
-    var i = pair.indexOf("=");
-    var key = decodeURIComponent(i < 0 ? pair : pair.slice(0, i));
-    qp[key] = i < 0 ? "" : decodeURIComponent(pair.slice(i + 1).replace(/\+/g, " "));
+    try {
+      var i = pair.indexOf("=");
+      var key = decodeURIComponent(i < 0 ? pair : pair.slice(0, i));
+      qp[key] = i < 0 ? "" : decodeURIComponent(pair.slice(i + 1).replace(/\+/g, " "));
+    } catch (e) { /* skip a malformed percent-encoded pair rather than throw */ }
   });
   var PMAP = { place:"place", lat:"latitude", lon:"longitude", lng:"longitude", tz:"timezone",
                theme:"theme", quotes:"quotes", poems:"poems", decks:"decks", ambient:"ambient", events:"events" };
@@ -151,8 +153,17 @@
     x.onerror = function () { cb(null); };
     try { x.send(); } catch (e) { cb(null); }
   }
+  // A "local:" source may only be a same-origin RELATIVE path (e.g. content/foo.js).
+  // Reject absolute / protocol-relative / scheme / backslash / traversal, so it can't
+  // resolve to a remote URL (e.g. local://evil/x.js -> //evil/x.js -> remote script).
+  function localPath(spec) {
+    var p = String(spec).slice(6);
+    if (!/^[A-Za-z0-9]/.test(p) || /[:\\]/.test(p) || p.indexOf("//") > -1 || p.indexOf("..") > -1) return null;
+    return p;
+  }
   function resolveUrl(spec) {
-    return (String(spec).indexOf("local:") === 0) ? (BASE + String(spec).slice(6)) : String(spec);
+    if (String(spec).indexOf("local:") === 0) { var p = localPath(spec); return p ? (BASE + p) : null; }
+    return String(spec);
   }
   // For quotes / poems / decks: "default" | URL | "local:file.js" | null.
   function loadContent(spec, globalName, defaultFile, cb) {
@@ -164,9 +175,9 @@
     }
     var isLocal = String(spec).indexOf("local:") === 0;
     var url = resolveUrl(spec);
-    // SECURITY: only same-origin `local:` files may be loaded as executable <script>.
-    // A remote source is ALWAYS treated as data (JSON/CSV), never executed — otherwise
-    // ?decks=https://evil.example/x.js would run arbitrary code on the page.
+    if (url === null) { cb(null); return; }   // invalid local: path — reject
+    // SECURITY: only a validated same-origin `local:` file may load as <script>.
+    // Remote sources are ALWAYS treated as data (JSON/CSV), never executed.
     if (isLocal && /\.js(\?|$)/i.test(url)) { loadScript(url, function () { cb(window[globalName] || null); }); return; }
     fetchData(url, cb);
   }
@@ -281,8 +292,8 @@
   });
 
   // ---- optional live modules: ambient, events (off unless a source is set) --
-  var ambientSrc = sourceFor("ambient");
-  if (ambientSrc) fetchData(resolveUrl(ambientSrc), function (data) {
+  var ambientSrc = sourceFor("ambient"), ambientUrl = ambientSrc ? resolveUrl(ambientSrc) : null;
+  if (ambientUrl) fetchData(ambientUrl, function (data) {
     var box = document.getElementById("ambient");
     var a = data ? (data.rooms ? (data.rooms[whoKey] || null) : data) : null;
     if (!a) { box.innerHTML = "<div class='label'>This room</div><div class='line dim'>—</div><div class='spacer'></div>"; return; }
@@ -301,8 +312,8 @@
     box.innerHTML = html + "<div class='spacer'></div>";
   });
 
-  var eventsSrc = sourceFor("events");
-  if (eventsSrc) fetchData(resolveUrl(eventsSrc), function (ev) {
+  var eventsSrc = sourceFor("events"), eventsUrl = eventsSrc ? resolveUrl(eventsSrc) : null;
+  if (eventsUrl) fetchData(eventsUrl, function (ev) {
     var html = "<div class='label'>Tomorrow" + (ev && ev.date ? " · " + esc(ev.date) : "") + "</div>";
     if (ev && ev.events && ev.events.length) {
       for (var i = 0; i < ev.events.length; i++) {
