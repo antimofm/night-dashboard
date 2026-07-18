@@ -16,7 +16,7 @@ editing **one file, `config.js`** — or by adding URL params to a bookmark.
 2. Settings → **Pages** → **Build and deployment → Source: GitHub Actions**
    (this repo ships an Actions deploy workflow). You get a URL like
    `https://you.github.io/your-repo/`.
-3. Open it. Done — it shows London weather, a quote, a poem, and the sample decks.
+3. Open it. Done — it shows London weather, a quote, and a poem.
 4. Edit **`config.js`** to make it yours (see below). Commit → Pages redeploys.
 
 Point your Kindle's browser at the URL. (Keeping a Kindle awake on one page is
@@ -29,7 +29,7 @@ Everything lives in [`config.js`](config.js), fully commented. The essentials:
 ```js
 window.CONFIG = {
   place: "London", latitude: 51.507, longitude: -0.128, timezone: "Europe/London",
-  quotes: "default", poems: "default", decks: "default",
+  quotes: "default", poems: "default", decks: null,
   ambient: null, events: null,
   profiles: [{ key: "me", name: "" }]
 };
@@ -72,8 +72,10 @@ renders today.
     `q`/`a` (the recall question and answer). Local `.js` sets
     `window.CONTENT_DECKS`.
 
-`content/quotes-alt.js` and `content/poems-alt.js` are example alternate packs —
-select one with e.g. `quotes: "local:content/quotes-alt.js"`.
+**No learning decks ship by default** (`decks: null`) — point `decks` at your own
+JSON source (or a `local:content/yourpack.js` you add) to enable the tap-to-open
+decks. To swap quotes/poems, point `quotes`/`poems` at a URL (JSON or CSV) or a
+`local:` file the same way.
 
 ## Optional live modules
 
@@ -107,4 +109,4 @@ web search for your exact Kindle.
 - `index.html` — loads `config.js`, then `app.js`. No build step.
 - `config.js` — **your settings** (the only file you normally edit).
 - `app.js` — the engine. Generic; contains no personal data.
-- `content/` — the default quote / poem / deck packs.
+- `content/` — the default quote and poem packs.

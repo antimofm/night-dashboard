@@ -24,7 +24,7 @@ window.CONFIG = {
   //    null                      turn the section off
   quotes: "default",
   poems:  "default",
-  decks:  "default",
+  decks:  null,        // no learning decks ship by default — point this at your own source to add some
 
   // ── Optional live modules — OFF unless you point them at a feed ──────────────
   //  Fetch JSON in the shapes documented in the README. Off by default, so a
