@@ -112,8 +112,12 @@
     var ni = 0;
     for (pi = 0; pi < profiles.length; pi++) if (profiles[pi].key === whoKey) ni = (pi + 1) % profiles.length;
     var np = profiles[ni];
+    // Preserve any existing URL overrides (lat/lon/tz/…), only swap `who`.
+    var qs = [], qk;
+    for (qk in qp) if (qp.hasOwnProperty(qk) && qk !== "who") qs.push(encodeURIComponent(qk) + "=" + encodeURIComponent(qp[qk]));
+    qs.push("who=" + encodeURIComponent(np.key));
     document.getElementById("who").innerHTML =
-      "<a href='?who=" + encodeURIComponent(np.key) + "'>⇄ " + esc(np.name || np.key) + "</a>";
+      "<a href='?" + qs.join("&") + "'>⇄ " + esc(np.name || np.key) + "</a>";
   }
 
   // ---- loaders --------------------------------------------------------------
