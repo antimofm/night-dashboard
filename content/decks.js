@@ -446,12 +446,12 @@ var SAS = { name: "SAS Survival", cards: [
     q: "Should you cut and suck a snake bite?",
     a: "Never — immobilise, bandage, keep the victim calm." },
   { t: "Burns",
-    b: ["Cool with clean water for at least 10 minutes.",
+    b: ["Cool with clean water for at least 20 minutes.",
         "Don't burst blisters or peel off stuck cloth. Cover",
         "loosely and keep it clean; sip water for shock.",
         "Deep or large burns need evacuation."],
     q: "How long do you cool a burn?",
-    a: "At least 10 minutes under clean water." },
+    a: "At least 20 minutes under clean water." },
   // --- 9. SURVIVAL AT SEA ---
   { t: "Adrift at sea",
     b: ["Get everyone into the raft and out of the water —",
@@ -645,9 +645,9 @@ var CARS = { name: "Cars", cards: [
     a: "Lights/bulbs, tyres, and wipers — all checkable at home." }
 ]};
 
-// Emergency — DE-IDENTIFIED reference deck. Mirrors the household `emergency`
-// skill SSOT (vault agents/household/skills/emergency). No names — conditions
-// are named as topics, not tied to a person — so it's safe on this public page.
+// Emergency — a de-identified quick first-aid / preparedness reference deck.
+// No names; conditions are named as topics, not tied to a person. NOT medical
+// advice — in a real emergency call your local emergency number.
 // Rendered by app.js as a collapsed section → accordion of topic titles, tap to
 // reveal. Cards are reference (t + b only, no recall). Life-threat topics first.
 var EMERGENCY = { name: "Emergency", cards: [
@@ -670,7 +670,7 @@ var EMERGENCY = { name: "Emergency", cards: [
         "Not cleared → 999. Unconscious → CPR."] },
   { t: "Anaphylaxis",
     b: ["Swollen lips/throat, wheeze, rash, faint.",
-        "EpiPen → outer mid-thigh, hold 10s. Note the time.",
+        "EpiPen → outer mid-thigh, hold firmly. Note the time.",
         "999 — say 'anaphylaxis'. Lie flat, legs up (sit up",
         "  if breathing is hard). Don't stand them up.",
         "No better in 5 min → second pen."] },
@@ -705,8 +705,7 @@ var EMERGENCY = { name: "Emergency", cards: [
   { t: "Poisoning / swallowed something",
     b: ["Do NOT make them vomit.",
         "Keep the packet or plant to show the medics.",
-        "999 if drowsy or breathing badly; else 111,",
-        "  or Poison Control 0344 892 0111."] },
+        "999 if drowsy or breathing badly; otherwise 111."] },
   { t: "Drowning",
     b: ["Get them out — don't put yourself in danger.",
         "5 rescue breaths FIRST, then CPR 30:2. 999."] },

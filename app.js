@@ -13,6 +13,10 @@
   var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   var days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
+  // HTML-escape anything from a config/URL/feed source before it goes into innerHTML.
+  var ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return ESC[c]; }); }
+
   // ---- config: DEFAULTS < config.js < URL params ----------------------------
   var DEFAULTS = {
     place: "London", latitude: 51.507, longitude: -0.128, timezone: "Europe/London",
@@ -107,7 +111,7 @@
     for (pi = 0; pi < profiles.length; pi++) if (profiles[pi].key === whoKey) ni = (pi + 1) % profiles.length;
     var np = profiles[ni];
     document.getElementById("who").innerHTML =
-      "<a href='?who=" + encodeURIComponent(np.key) + "'>⇄ " + (np.name || np.key) + "</a>";
+      "<a href='?who=" + encodeURIComponent(np.key) + "'>⇄ " + esc(np.name || np.key) + "</a>";
   }
 
   // ---- loaders --------------------------------------------------------------
@@ -158,8 +162,12 @@
       loadScript(BASE + defaultFile, function () { cb(window[globalName] || null); });
       return;
     }
+    var isLocal = String(spec).indexOf("local:") === 0;
     var url = resolveUrl(spec);
-    if (/\.js(\?|$)/i.test(url)) { loadScript(url, function () { cb(window[globalName] || null); }); return; }
+    // SECURITY: only same-origin `local:` files may be loaded as executable <script>.
+    // A remote source is ALWAYS treated as data (JSON/CSV), never executed — otherwise
+    // ?decks=https://evil.example/x.js would run arbitrary code on the page.
+    if (isLocal && /\.js(\?|$)/i.test(url)) { loadScript(url, function () { cb(window[globalName] || null); }); return; }
     fetchData(url, cb);
   }
 
@@ -174,21 +182,21 @@
     var el = document.getElementById(id); if (!el) return;
     el.style.display = el.style.display === "none" ? "block" : "none";
   };
-  function section(key, label, body) {
+  function section(key, label, body) {   // key is internal; label is source-derived → escape
     return "<div class='label sec' onclick=\"__toggle('" + key + "')\">" +
-           "<span class='dim' id='" + key + "-i'>+</span> " + label + "</div>" +
+           "<span class='dim' id='" + key + "-i'>+</span> " + esc(label) + "</div>" +
            "<div id='" + key + "' style='display:none'>" + body + "</div>";
   }
   function cardInner(card, r, recallId, recallLabel) {
-    var h = "<div class='line title'>" + card.t + "</div>";
+    var h = "<div class='line title'>" + esc(card.t) + "</div>";
     var b = card.b || [];
-    for (var li = 0; li < b.length; li++) h += "<div class='line'>" + b[li] + "</div>";
+    for (var li = 0; li < b.length; li++) h += "<div class='line'>" + esc(b[li]) + "</div>";
     h += "<div style='height:8px'></div>";
     if (r) {
       h += "<div class='line' onclick=\"__tgl('" + recallId + "')\">" +
-           "<span class='dim'>Recall" + (recallLabel ? " · " + recallLabel : "") + " —</span> " +
-           r.q + " <span class='dim'>[tap]</span></div>";
-      h += "<div class='line' id='" + recallId + "' style='display:none'>" + r.a + "</div>";
+           "<span class='dim'>Recall" + (recallLabel ? " · " + esc(recallLabel) : "") + " —</span> " +
+           esc(r.q) + " <span class='dim'>[tap]</span></div>";
+      h += "<div class='line' id='" + recallId + "' style='display:none'>" + esc(r.a) + "</div>";
     }
     return h;
   }
@@ -215,10 +223,10 @@
         var inner = "";
         for (var ci = 0; ci < cards.length; ci++) {
           var ec = cards[ci], eid = "acc-d" + di + "-" + ci;
-          inner += "<div class='line title' onclick=\"__tgl('" + eid + "')\">" + ec.t + " <span class='dim'>[tap]</span></div>";
+          inner += "<div class='line title' onclick=\"__tgl('" + eid + "')\">" + esc(ec.t) + " <span class='dim'>[tap]</span></div>";
           inner += "<div id='" + eid + "' style='display:none'>";
           var eb = ec.b || [];
-          for (var bi = 0; bi < eb.length; bi++) inner += "<div class='line'>" + eb[bi] + "</div>";
+          for (var bi = 0; bi < eb.length; bi++) inner += "<div class='line'>" + esc(eb[bi]) + "</div>";
           inner += "</div><div class='spacer'></div>";
         }
         html += section(key, deck.name, inner);
@@ -254,7 +262,7 @@
     if (!list || !list.length) { box.style.display = "none"; return; }
     var q = list[dayIndex(list.length)];
     if (!q || q[0] == null) { box.style.display = "none"; return; }   // wrong-shape guard
-    document.getElementById("quote").textContent = "“" + q[0] + "”";
+    document.getElementById("quote").textContent = "“" + q[0] + "”";  // textContent = safe
     document.getElementById("author").textContent = "— " + (q[1] || "");
   });
   loadContent(sourceFor("poems"), "CONTENT_POEMS", "content/poems.js", function (list) {
@@ -262,10 +270,10 @@
     var pm = list[dayIndex(list.length)];
     if (!pm || pm[1] == null) return;   // wrong-shape guard
     var html = "";
-    if (pm[0]) { html += "<div class='line'>" + pm[0] + "</div><div style='height:8px'></div>"; }
+    if (pm[0]) { html += "<div class='line'>" + esc(pm[0]) + "</div><div style='height:8px'></div>"; }
     var lines = String(pm[1]).split("\n");
-    for (var i = 0; i < lines.length; i++) html += "<div class='line dim'>" + lines[i] + "</div>";
-    html += "<div class='dim' style='margin-top:4px'>— " + (pm[2] || "") + "</div>";
+    for (var i = 0; i < lines.length; i++) html += "<div class='line dim'>" + esc(lines[i]) + "</div>";
+    html += "<div class='dim' style='margin-top:4px'>— " + esc(pm[2] || "") + "</div>";
     document.getElementById("breath").innerHTML = html;
   });
   loadContent(sourceFor("decks"), "CONTENT_DECKS", "content/decks.js", function (decks) {
@@ -278,13 +286,13 @@
     var box = document.getElementById("ambient");
     var a = data ? (data.rooms ? (data.rooms[whoKey] || null) : data) : null;
     if (!a) { box.innerHTML = "<div class='label'>This room</div><div class='line dim'>—</div><div class='spacer'></div>"; return; }
-    var html = "<div class='label'>This room" + (a.room ? " · " + a.room : "") + "</div>";
+    var html = "<div class='label'>This room" + (a.room ? " · " + esc(a.room) : "") + "</div>";
     var bits = [];
-    if (a.temp != null) bits.push(a.temp + "°C");
-    if (a.rh != null) bits.push(a.rh + "% RH");
-    if (a.co2 != null) bits.push("CO2 " + a.co2);
-    if (a.voc != null) bits.push("VOC " + a.voc);
-    if (a.pm25 != null) bits.push("PM2.5 " + a.pm25);
+    if (a.temp != null) bits.push(esc(a.temp) + "°C");
+    if (a.rh != null) bits.push(esc(a.rh) + "% RH");
+    if (a.co2 != null) bits.push("CO2 " + esc(a.co2));
+    if (a.voc != null) bits.push("VOC " + esc(a.voc));
+    if (a.pm25 != null) bits.push("PM2.5 " + esc(a.pm25));
     html += "<div class='line'>" + bits.join("   ") + "</div>";
     if (a.humidifier) {
       var h = a.humidifier, state = h.water_low ? "Tank empty" : (h.on ? "On" : "Off");
@@ -295,11 +303,11 @@
 
   var eventsSrc = sourceFor("events");
   if (eventsSrc) fetchData(resolveUrl(eventsSrc), function (ev) {
-    var html = "<div class='label'>Tomorrow" + (ev && ev.date ? " · " + ev.date : "") + "</div>";
+    var html = "<div class='label'>Tomorrow" + (ev && ev.date ? " · " + esc(ev.date) : "") + "</div>";
     if (ev && ev.events && ev.events.length) {
       for (var i = 0; i < ev.events.length; i++) {
         var e = ev.events[i];
-        html += "<div class='line'><span class='dim'>" + e.time + "</span>  " + e.title + "</div>";
+        html += "<div class='line'><span class='dim'>" + esc(e.time) + "</span>  " + esc(e.title) + "</div>";
       }
     } else { html += "<div class='line dim'>Nothing scheduled</div>"; }
     document.getElementById("events").innerHTML = html + "<div class='spacer'></div>";
@@ -383,7 +391,7 @@
                    wmoShort(daily.weather_code[i]) + " · rain " + daily.precipitation_probability_max[i] + "%");
     };
 
-    var wh = "<div class='line'>" + String(cfg.place).toUpperCase() + "  " + Math.round(c.temperature_2m) + "°  " + wmoShort(c.weather_code) +
+    var wh = "<div class='line'>" + esc(String(cfg.place).toUpperCase()) + "  " + Math.round(c.temperature_2m) + "°  " + wmoShort(c.weather_code) +
          "<span style='float:right'><span class='dim'>" + m.name + "</span> " + moonDisc(m) + "</span></div>";
     wh += "<div class='spacer' style='height:8px'></div>";
     wh += fline("Tonight", tonightMin, tonightMax, tonightNote);
